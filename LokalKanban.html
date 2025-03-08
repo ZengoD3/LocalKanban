@@ -16,6 +16,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Kanban Board (localStorage)</title>
+  <!-- XLSX Library from CDN for .xlsx export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     /* -----------------------------
        1. BASE & RESET STYLES
@@ -29,7 +31,6 @@
       color: #333;
       line-height: 1.6;
     }
-
     /* -----------------------------
        2. HEADER & TOOLBAR
     ----------------------------- */
@@ -79,7 +80,6 @@
       transition: background-color 0.3s ease;
     }
     label[for="restoreInput"]:hover { opacity: 0.9; }
-
     /* -----------------------------
        3. BOARD & COLUMNS
     ----------------------------- */
@@ -116,7 +116,6 @@
     }
     .column button:hover { background-color: #2980b9; }
     .task-list { flex-grow: 1; padding: 10px; min-height: 220px; }
-
     /* -----------------------------
        4. TASK CARDS
     ----------------------------- */
@@ -144,7 +143,6 @@
       padding: 5px 8px;
     }
     .task button:hover { background-color: #2980b9; }
-    
     /* -----------------------------
        5. MODALS
     ----------------------------- */
@@ -203,7 +201,6 @@
     }
     .modalPanel button[type="submit"] { background-color: #2ecc71; }
     .modalPanel button[type="button"] { background-color: #e74c3c; }
-
     /* -----------------------------
        5.1 Label Selection in Modals
     ----------------------------- */
@@ -234,7 +231,6 @@
       padding: 10px;
     }
     .newLabelSection label { margin-top: 5px; font-weight: 500; }
-
     /* -----------------------------
        5.2 New Fields: Estimated Time & Worked Hours
     ----------------------------- */
@@ -248,7 +244,6 @@
     .modalPanel .timeField label {
       margin-top: 0;
     }
-
     /* -----------------------------
        6. EXPORT REPORT MODAL
     ----------------------------- */
@@ -274,7 +269,7 @@
       font-size: 0.9rem;
       color: #333;
     }
-    .exportModalPanel input {
+    .exportModalPanel input, .exportModalPanel select {
       width: 100%;
       padding: 8px;
       margin-top: 5px;
@@ -294,7 +289,6 @@
     }
     .exportModalPanel button[type="submit"] { background-color: #9b59b6; }
     .exportModalPanel button[type="button"] { background-color: #e74c3c; }
-
     /* -----------------------------
        7. RESPONSIVE TWEAKS
     ----------------------------- */
@@ -357,16 +351,12 @@
       <form id="createTaskForm">
         <label for="taskName">Task Name:</label>
         <input type="text" id="taskName" required>
-
         <label for="taskDescription">Description:</label>
         <textarea id="taskDescription" rows="3"></textarea>
-
         <label for="taskDeadline">Deadline:</label>
         <input type="datetime-local" id="taskDeadline">
-
         <label for="taskNote">Note:</label>
         <input type="text" id="taskNote">
-
         <div class="timeField">
           <div>
             <label for="taskEstimatedTime">Estimated Time (hrs):</label>
@@ -377,7 +367,6 @@
             <input type="number" id="taskWorkedHours" step="0.25" placeholder="e.g., 3.25">
           </div>
         </div>
-
         <!-- Label selection section -->
         <label>Labels:</label>
         <div id="createLabelContainer" class="labelContainer"></div>
@@ -389,7 +378,6 @@
           <input type="color" id="newLabelColor" value="#ff0000">
           <button type="button" onclick="addNewLabel('create')">Add Label</button>
         </div>
-
         <div style="display: flex; justify-content: space-between; margin-top: 15px;">
           <button type="submit">Create Task</button>
           <button type="button" onclick="closeCreateModal()">Cancel</button>
@@ -405,16 +393,12 @@
       <form id="editTaskForm">
         <label for="editTaskName">Task Name:</label>
         <input type="text" id="editTaskName" required>
-
         <label for="editTaskDescription">Description:</label>
         <textarea id="editTaskDescription" rows="3"></textarea>
-
         <label for="editTaskDeadline">Deadline:</label>
         <input type="datetime-local" id="editTaskDeadline">
-
         <label for="editTaskNote">Note:</label>
         <input type="text" id="editTaskNote">
-
         <div class="timeField">
           <div>
             <label for="editTaskEstimatedTime">Estimated Time (hrs):</label>
@@ -425,7 +409,6 @@
             <input type="number" id="editTaskWorkedHours" step="0.25">
           </div>
         </div>
-
         <!-- Label selection section for editing -->
         <label>Labels:</label>
         <div id="editLabelContainer" class="labelContainer"></div>
@@ -437,7 +420,6 @@
           <input type="color" id="editNewLabelColor" value="#ff0000">
           <button type="button" onclick="addNewLabel('edit')">Add Label</button>
         </div>
-
         <div style="display: flex; justify-content: space-between; margin-top: 15px;">
           <button type="submit">Save Changes</button>
           <button type="button" onclick="closeEditModal()">Cancel</button>
@@ -455,6 +437,12 @@
         <input type="date" id="exportStartDate" required>
         <label for="exportEndDate">End Date:</label>
         <input type="date" id="exportEndDate" required>
+        <!-- Új mező a formátum választásához -->
+        <label for="exportFormat">Format:</label>
+        <select id="exportFormat">
+          <option value="csv">CSV</option>
+          <option value="xlsx">XLSX</option>
+        </select>
         <div style="display: flex; justify-content: space-between; margin-top: 15px;">
           <button type="submit">Export Report</button>
           <button type="button" onclick="closeExportModal()">Cancel</button>
@@ -502,7 +490,6 @@
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.id = containerId + "_label_" + label.id;
-        // no need to convert
         checkbox.value = label.id;
         if (selectedLabels.includes(label.id)) { checkbox.checked = true; }
         const span = document.createElement("span");
@@ -634,7 +621,7 @@
     });
 
     /* ------------------------------
-       EXPORT REPORT MODAL
+       EXPORT WORK REPORT MODAL
     ------------------------------ */
     function openExportModal() {
       document.getElementById("exportForm").reset();
@@ -658,15 +645,12 @@
       // Convert start and end dates to Date objects (start of day and end of day)
       const start = new Date(startDate + "T00:00:00");
       const end = new Date(endDate + "T23:59:59");
-      // Aggregate worked hours per day and per label
       let report = {}; // { "YYYY-MM-DD": { labelName: totalWorkedHours, ... } }
       tasks.forEach(task => {
-        // Use task.creationDate as the work date
         const taskDate = new Date(task.creationDate);
         if (taskDate >= start && taskDate <= end) {
           const day = task.creationDate.split("T")[0];
           if (!report[day]) report[day] = {};
-          // For each label of the task, add its workedHours (as number)
           const worked = parseFloat(task.workedHours) || 0;
           if (task.labels && task.labels.length > 0) {
             task.labels.forEach(labelId => {
@@ -677,27 +661,60 @@
               }
             });
           } else {
-            // Tasks without label go to "No Label"
             if (!report[day]["No Label"]) report[day]["No Label"] = 0;
             report[day]["No Label"] += worked;
           }
         }
       });
-      let csv = "Date,Label,Total Worked Hours\n";
+      
+      // Közös adatstruktúra: egy 2D tömb, melynek első sora a fejléc, majd sorok
+      let data = [["Date", "Label", "Total Worked Hours"]];
       for (const day in report) {
         for (const label in report[day]) {
-          csv += `${day},${label},${report[day][label].toFixed(2)}\n`;
+          data.push([day, label, report[day][label].toFixed(2)]);
         }
       }
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "work_report.csv";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      
+      // Kiválasztjuk a formátumot
+      const format = document.getElementById("exportFormat").value;
+      
+      if (format === "xlsx") {
+        // XLSX exportálás a SheetJS segítségével
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        XLSX.utils.book_append_sheet(wb, ws, "Report");
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+        function s2ab(s) {
+          const buf = new ArrayBuffer(s.length);
+          const view = new Uint8Array(buf);
+          for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+          return buf;
+        }
+        const blob = new Blob([s2ab(wbout)], { type: "application/octet-stream" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "work_report.xlsx";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } else {
+        // CSV exportálás
+        let csv = "Date,Label,Total Worked Hours\n";
+        data.slice(1).forEach(row => {
+          csv += row.join(",") + "\n";
+        });
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "work_report.csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
     }
 
     /* ------------------------------
@@ -810,7 +827,7 @@
       }
     }
     function backupData() {
-      // Mentjük a feladatokat és a címkéket is
+      // Save tasks and labels together
       const backupObj = { tasks: tasks, labels: labels };
       const dataStr = JSON.stringify(backupObj, null, 2);
       const blob = new Blob([dataStr], { type: "application/json" });
@@ -830,7 +847,6 @@
       reader.onload = function(e) {
         try {
           const data = JSON.parse(e.target.result);
-          // Ha a mentés tartalmazza a tasks és labels mezőket, akkor azt állítjuk vissza
           if (data.tasks !== undefined && data.labels !== undefined) {
             tasks = data.tasks;
             labels = data.labels;
@@ -839,7 +855,6 @@
             renderAllTasks();
             alert("Data restored successfully!");
           } else if (Array.isArray(data)) {
-            // Régebbi formátum esetén csak a feladatokat állítjuk vissza
             tasks = data;
             saveToLocalStorage();
             renderAllTasks();
@@ -853,69 +868,6 @@
       };
       reader.readAsText(file);
       event.target.value = "";
-    }
-
-    /* ------------------------------
-       EXPORT WORK REPORT
-    ------------------------------ */
-    function openExportModal() {
-      document.getElementById("exportForm").reset();
-      document.getElementById("exportModalOverlay").style.display = "flex";
-    }
-    function closeExportModal() {
-      document.getElementById("exportModalOverlay").style.display = "none";
-    }
-    document.getElementById("exportForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const startDate = document.getElementById("exportStartDate").value;
-      const endDate = document.getElementById("exportEndDate").value;
-      if (!startDate || !endDate) {
-        alert("Please select both start and end dates.");
-        return;
-      }
-      exportWorkReport(startDate, endDate);
-      closeExportModal();
-    });
-    function exportWorkReport(startDate, endDate) {
-      // Filter tasks by creationDate between start and end (inclusive)
-      const start = new Date(startDate + "T00:00:00");
-      const end = new Date(endDate + "T23:59:59");
-      let report = {}; // Format: { "YYYY-MM-DD": { labelName: totalWorkedHours, ... } }
-      tasks.forEach(task => {
-        const taskDate = new Date(task.creationDate);
-        if (taskDate >= start && taskDate <= end) {
-          const day = task.creationDate.split("T")[0];
-          if (!report[day]) report[day] = {};
-          const worked = parseFloat(task.workedHours) || 0;
-          if (task.labels && task.labels.length > 0) {
-            task.labels.forEach(labelId => {
-              const label = labels.find(l => l.id == labelId);
-              if (label) {
-                if (!report[day][label.name]) report[day][label.name] = 0;
-                report[day][label.name] += worked;
-              }
-            });
-          } else {
-            if (!report[day]["No Label"]) report[day]["No Label"] = 0;
-            report[day]["No Label"] += worked;
-          }
-        }
-      });
-      let csv = "Date,Label,Total Worked Hours\n";
-      for (const day in report) {
-        for (const label in report[day]) {
-          csv += `${day},${label},${report[day][label].toFixed(2)}\n`;
-        }
-      }
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "work_report.csv";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
     }
 
     /* ------------------------------
@@ -936,6 +888,12 @@
         <input type="date" id="exportStartDate" required>
         <label for="exportEndDate">End Date:</label>
         <input type="date" id="exportEndDate" required>
+        <!-- Formátumválasztó -->
+        <label for="exportFormat">Format:</label>
+        <select id="exportFormat">
+          <option value="csv">CSV</option>
+          <option value="xlsx">XLSX</option>
+        </select>
         <div style="display: flex; justify-content: space-between; margin-top: 15px;">
           <button type="submit">Export Report</button>
           <button type="button" onclick="closeExportModal()">Cancel</button>
