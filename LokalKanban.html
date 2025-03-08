@@ -1,5 +1,4 @@
 ﻿<!DOCTYPE html>
-
 <!-- 
     LocalKanban - A simple, offline Kanban board in a single HTML file.  
     No server, no dependencies – just open and use.  
@@ -13,7 +12,6 @@
     See https://www.gnu.org/licenses/agpl-3.0.html for details.
 -->
 
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -504,8 +502,9 @@
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.id = containerId + "_label_" + label.id;
+        // no need to convert
         checkbox.value = label.id;
-        if (selectedLabels.includes(String(label.id))) { checkbox.checked = true; }
+        if (selectedLabels.includes(label.id)) { checkbox.checked = true; }
         const span = document.createElement("span");
         span.textContent = label.name;
         span.style.backgroundColor = label.color;
@@ -536,7 +535,7 @@
     }
     function getTaskLabels(taskId) {
       const task = tasks.find(t => t.id == taskId);
-      return task && task.labels ? task.labels.map(String) : [];
+      return task && task.labels ? task.labels : [];
     }
 
     /* ------------------------------
@@ -564,7 +563,7 @@
       const taskWorkedHours = document.getElementById("taskWorkedHours").value.trim();
       let selectedLabels = [];
       document.querySelectorAll("#createLabelContainer input[type=checkbox]").forEach(checkbox => {
-        if (checkbox.checked) { selectedLabels.push(checkbox.value); }
+        if (checkbox.checked) { selectedLabels.push(Number(checkbox.value)); }
       });
       const task = {
         id: Date.now(),
@@ -620,7 +619,7 @@
       const newWorkedHours = document.getElementById("editTaskWorkedHours").value.trim();
       let selectedLabels = [];
       document.querySelectorAll("#editLabelContainer input[type=checkbox]").forEach(checkbox => {
-        if (checkbox.checked) { selectedLabels.push(checkbox.value); }
+        if (checkbox.checked) { selectedLabels.push(Number(checkbox.value)); }
       });
       task.name = newName;
       task.description = newDescription;
@@ -665,7 +664,7 @@
         // Use task.creationDate as the work date
         const taskDate = new Date(task.creationDate);
         if (taskDate >= start && taskDate <= end) {
-          const day = task.creationDate.split("T")[0]; // "YYYY-MM-DD"
+          const day = task.creationDate.split("T")[0];
           if (!report[day]) report[day] = {};
           // For each label of the task, add its workedHours (as number)
           const worked = parseFloat(task.workedHours) || 0;
@@ -684,14 +683,12 @@
           }
         }
       });
-      // Convert report object to CSV string
       let csv = "Date,Label,Total Worked Hours\n";
       for (const day in report) {
         for (const label in report[day]) {
           csv += `${day},${label},${report[day][label].toFixed(2)}\n`;
         }
       }
-      // Trigger CSV download
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -805,13 +802,17 @@
     function clearLocalStorage() {
       if (confirm("Are you sure you want to delete all data from localStorage?")) {
         localStorage.removeItem("kanbanTasks");
+        localStorage.removeItem("kanbanLabels");
         tasks = [];
+        labels = [];
         renderAllTasks();
         alert("Data deleted.");
       }
     }
     function backupData() {
-      const dataStr = JSON.stringify(tasks, null, 2);
+      // Mentjük a feladatokat és a címkéket is
+      const backupObj = { tasks: tasks, labels: labels };
+      const dataStr = JSON.stringify(backupObj, null, 2);
       const blob = new Blob([dataStr], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -829,11 +830,20 @@
       reader.onload = function(e) {
         try {
           const data = JSON.parse(e.target.result);
-          if (Array.isArray(data)) {
+          // Ha a mentés tartalmazza a tasks és labels mezőket, akkor azt állítjuk vissza
+          if (data.tasks !== undefined && data.labels !== undefined) {
+            tasks = data.tasks;
+            labels = data.labels;
+            saveToLocalStorage();
+            saveLabelsToLocalStorage();
+            renderAllTasks();
+            alert("Data restored successfully!");
+          } else if (Array.isArray(data)) {
+            // Régebbi formátum esetén csak a feladatokat állítjuk vissza
             tasks = data;
             saveToLocalStorage();
             renderAllTasks();
-            alert("Data restored successfully!");
+            alert("Data restored successfully! (tasks only)");
           } else {
             alert("Invalid file format.");
           }
