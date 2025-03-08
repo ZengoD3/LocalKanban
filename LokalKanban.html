@@ -10,9 +10,10 @@
     Repository: https://github.com/ZengoD3/LocalKanban
 
     This project is licensed under the GNU AGPL v3.  
-    See https://www.gnu.org/licenses/agpl-3.0.html for details.  
+    See https://www.gnu.org/licenses/agpl-3.0.html for details.
 -->
 
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -21,9 +22,7 @@
     /* -----------------------------
        1. BASE & RESET STYLES
     ----------------------------- */
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
     body {
       margin: 0;
       padding: 0;
@@ -67,18 +66,11 @@
       transition: background-color 0.3s ease;
       color: #fff;
     }
-    button:hover {
-      opacity: 0.9;
-    }
-    #clearStorageBtn {
-      background-color: #e74c3c;
-    }
-    #backupBtn {
-      background-color: #2ecc71;
-    }
-    #restoreInput {
-      display: none; /* We'll rely on the label for styling/click */
-    }
+    button:hover { opacity: 0.9; }
+    #clearStorageBtn { background-color: #e74c3c; }
+    #backupBtn { background-color: #2ecc71; }
+    #exportReportBtn { background-color: #9b59b6; }
+    #restoreInput { display: none; }
     label[for="restoreInput"] {
       display: inline-block;
       background-color: #3498db;
@@ -88,9 +80,7 @@
       color: #fff;
       transition: background-color 0.3s ease;
     }
-    label[for="restoreInput"]:hover {
-      opacity: 0.9;
-    }
+    label[for="restoreInput"]:hover { opacity: 0.9; }
 
     /* -----------------------------
        3. BOARD & COLUMNS
@@ -101,7 +91,7 @@
       justify-content: center;
       gap: 20px;
       margin: 0 auto;
-      max-width: 1400px;
+      max-width: 1500px;
       padding: 10px;
     }
     .column {
@@ -126,14 +116,8 @@
       background-color: #3498db;
       font-size: 0.85rem;
     }
-    .column button:hover {
-      background-color: #2980b9;
-    }
-    .task-list {
-      flex-grow: 1;
-      padding: 10px;
-      min-height: 220px;
-    }
+    .column button:hover { background-color: #2980b9; }
+    .task-list { flex-grow: 1; padding: 10px; min-height: 220px; }
 
     /* -----------------------------
        4. TASK CARDS
@@ -154,27 +138,15 @@
       font-size: 1rem;
       color: #2c3e50;
     }
-    .task em {
-      font-style: normal;
-      color: #555;
-      font-size: 0.85rem;
-    }
+    .task em { font-style: normal; color: #555; font-size: 0.85rem; }
     .task button {
       background-color: #3498db;
       margin-top: 6px;
       font-size: 0.8rem;
       padding: 5px 8px;
     }
-    .task button:hover {
-      background-color: #2980b9;
-    }
-
-    /* (Optional classes for color-coded backgrounds, if needed)
-       .light-green { background-color: #d4f4dd; }
-       .light-yellow { background-color: #fff9c4; }
-       .light-red { background-color: #f4d4d4; }
-    */
-
+    .task button:hover { background-color: #2980b9; }
+    
     /* -----------------------------
        5. MODALS
     ----------------------------- */
@@ -220,10 +192,7 @@
       border-radius: 4px;
       font-size: 0.9rem;
     }
-    .modalPanel textarea {
-      resize: vertical;
-      min-height: 60px;
-    }
+    .modalPanel textarea { resize: vertical; min-height: 60px; }
     .modalPanel button {
       margin-top: 10px;
       padding: 8px 14px;
@@ -234,14 +203,12 @@
       color: #fff;
       font-size: 0.9rem;
     }
-    .modalPanel button[type="submit"] {
-      background-color: #2ecc71;
-    }
-    .modalPanel button[type="button"] {
-      background-color: #e74c3c;
-    }
+    .modalPanel button[type="submit"] { background-color: #2ecc71; }
+    .modalPanel button[type="button"] { background-color: #e74c3c; }
 
-    /* Label Container & Checkboxes in modals */
+    /* -----------------------------
+       5.1 Label Selection in Modals
+    ----------------------------- */
     .labelContainer {
       display: flex;
       flex-wrap: wrap;
@@ -253,16 +220,13 @@
       align-items: center;
       gap: 5px;
     }
-    .labelContainer input[type="checkbox"] {
-      margin: 0;
-    }
+    .labelContainer input[type="checkbox"] { margin: 0; }
     .labelContainer span {
       color: #fff;
       padding: 2px 5px;
       border-radius: 3px;
       font-size: 0.8rem;
     }
-
     .newLabelSection {
       margin-top: 12px;
       display: none;
@@ -271,28 +235,75 @@
       border-radius: 4px;
       padding: 10px;
     }
-    .newLabelSection label {
-      margin-top: 5px;
-      font-weight: 500;
+    .newLabelSection label { margin-top: 5px; font-weight: 500; }
+
+    /* -----------------------------
+       5.2 New Fields: Estimated Time & Worked Hours
+    ----------------------------- */
+    .modalPanel .timeField {
+      display: flex;
+      gap: 10px;
     }
-    .newLabelSection input[type="text"],
-    .newLabelSection input[type="color"] {
-      margin-top: 3px;
+    .modalPanel .timeField > div {
+      flex: 1;
+    }
+    .modalPanel .timeField label {
+      margin-top: 0;
     }
 
     /* -----------------------------
-       6. RESPONSIVE TWEAKS
+       6. EXPORT REPORT MODAL
+    ----------------------------- */
+    .exportModalPanel {
+      background: #fff;
+      padding: 20px;
+      border-radius: 4px;
+      width: 100%;
+      max-width: 340px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    .exportModalPanel h2 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 1.4rem;
+      text-align: center;
+      color: #9b59b6;
+    }
+    .exportModalPanel label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #333;
+    }
+    .exportModalPanel input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    .exportModalPanel button {
+      margin-top: 15px;
+      padding: 8px 14px;
+      width: 48%;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #fff;
+      font-size: 0.9rem;
+    }
+    .exportModalPanel button[type="submit"] { background-color: #9b59b6; }
+    .exportModalPanel button[type="button"] { background-color: #e74c3c; }
+
+    /* -----------------------------
+       7. RESPONSIVE TWEAKS
     ----------------------------- */
     @media (max-width: 640px) {
-      .column {
-        flex: 1 1 100%;
-      }
-      .toolbar {
-        margin: 10px;
-      }
-      .modalPanel {
-        max-width: 95%;
-      }
+      .column { flex: 1 1 100%; }
+      .toolbar { margin: 10px; }
+      .modalPanel, .exportModalPanel { max-width: 95%; }
     }
   </style>
 </head>
@@ -300,44 +311,40 @@
 
   <!-- Header -->
   <header>
-    <h1>Kanban Board (localStorage)</h1>
+    <h1>Local Kanban</h1>
   </header>
 
-  <!-- Toolbar with data management buttons -->
+  <!-- Toolbar -->
   <div class="toolbar">
     <button id="clearStorageBtn" onclick="clearLocalStorage()">Clear Data</button>
     <button id="backupBtn" onclick="backupData()">Backup Data to JSON</button>
+    <button id="exportReportBtn" onclick="openExportModal()">Export Work Report</button>
     <input type="file" id="restoreInput" onchange="restoreBackup(event)">
     <label for="restoreInput">Restore Data from JSON</label>
   </div>
 
   <!-- Board Columns -->
   <div class="board">
-    <!-- Backlog Column -->
     <div class="column" data-status="backlog">
       <h2>Backlog</h2>
       <button onclick="openCreateModal('backlog')">New Task</button>
       <div class="task-list" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
     </div>
-    <!-- To Do Column -->
     <div class="column" data-status="todo">
       <h2>To Do</h2>
       <button onclick="openCreateModal('todo')">New Task</button>
       <div class="task-list" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
     </div>
-    <!-- In Progress Column -->
     <div class="column" data-status="inprogress">
       <h2>In Progress</h2>
       <button onclick="openCreateModal('inprogress')">New Task</button>
       <div class="task-list" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
     </div>
-    <!-- Paused Column -->
     <div class="column" data-status="paused">
       <h2>Paused</h2>
       <button onclick="openCreateModal('paused')">New Task</button>
       <div class="task-list" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
     </div>
-    <!-- Done Column -->
     <div class="column" data-status="done">
       <h2>Done</h2>
       <button onclick="openCreateModal('done')">New Task</button>
@@ -352,20 +359,31 @@
       <form id="createTaskForm">
         <label for="taskName">Task Name:</label>
         <input type="text" id="taskName" required>
-        
-        <label for="taskDescription">Task Description:</label>
+
+        <label for="taskDescription">Description:</label>
         <textarea id="taskDescription" rows="3"></textarea>
-        
-        <label for="taskDeadline">Task Deadline:</label>
+
+        <label for="taskDeadline">Deadline:</label>
         <input type="datetime-local" id="taskDeadline">
-        
-        <label for="taskComment">Task Comment:</label>
-        <input type="text" id="taskComment">
-        
+
+        <label for="taskNote">Note:</label>
+        <input type="text" id="taskNote">
+
+        <div class="timeField">
+          <div>
+            <label for="taskEstimatedTime">Estimated Time (hrs):</label>
+            <input type="number" id="taskEstimatedTime" step="0.25" placeholder="e.g., 4.5">
+          </div>
+          <div>
+            <label for="taskWorkedHours">Worked Hours (hrs):</label>
+            <input type="number" id="taskWorkedHours" step="0.25" placeholder="e.g., 3.25">
+          </div>
+        </div>
+
         <!-- Label selection section -->
         <label>Labels:</label>
         <div id="createLabelContainer" class="labelContainer"></div>
-        <button type="button" onclick="toggleNewLabel('create')">Add New Label</button>
+        <button type="button" onclick="toggleNewLabel('create')">Create Label</button>
         <div id="createNewLabelSection" class="newLabelSection">
           <label for="newLabelName">New Label Name:</label>
           <input type="text" id="newLabelName">
@@ -373,8 +391,8 @@
           <input type="color" id="newLabelColor" value="#ff0000">
           <button type="button" onclick="addNewLabel('create')">Add Label</button>
         </div>
-        
-        <div style="display: flex; justify-content: space-between;">
+
+        <div style="display: flex; justify-content: space-between; margin-top: 15px;">
           <button type="submit">Create Task</button>
           <button type="button" onclick="closeCreateModal()">Cancel</button>
         </div>
@@ -389,20 +407,31 @@
       <form id="editTaskForm">
         <label for="editTaskName">Task Name:</label>
         <input type="text" id="editTaskName" required>
-        
-        <label for="editTaskDescription">Task Description:</label>
+
+        <label for="editTaskDescription">Description:</label>
         <textarea id="editTaskDescription" rows="3"></textarea>
-        
-        <label for="editTaskDeadline">Task Deadline:</label>
+
+        <label for="editTaskDeadline">Deadline:</label>
         <input type="datetime-local" id="editTaskDeadline">
-        
-        <label for="editTaskComment">Task Comment:</label>
-        <input type="text" id="editTaskComment">
-        
+
+        <label for="editTaskNote">Note:</label>
+        <input type="text" id="editTaskNote">
+
+        <div class="timeField">
+          <div>
+            <label for="editTaskEstimatedTime">Estimated Time (hrs):</label>
+            <input type="number" id="editTaskEstimatedTime" step="0.25">
+          </div>
+          <div>
+            <label for="editTaskWorkedHours">Worked Hours (hrs):</label>
+            <input type="number" id="editTaskWorkedHours" step="0.25">
+          </div>
+        </div>
+
         <!-- Label selection section for editing -->
         <label>Labels:</label>
         <div id="editLabelContainer" class="labelContainer"></div>
-        <button type="button" onclick="toggleNewLabel('edit')">Add New Label</button>
+        <button type="button" onclick="toggleNewLabel('edit')">Create Label</button>
         <div id="editNewLabelSection" class="newLabelSection">
           <label for="editNewLabelName">New Label Name:</label>
           <input type="text" id="editNewLabelName">
@@ -410,8 +439,8 @@
           <input type="color" id="editNewLabelColor" value="#ff0000">
           <button type="button" onclick="addNewLabel('edit')">Add Label</button>
         </div>
-        
-        <div style="display: flex; justify-content: space-between;">
+
+        <div style="display: flex; justify-content: space-between; margin-top: 15px;">
           <button type="submit">Save Changes</button>
           <button type="button" onclick="closeEditModal()">Cancel</button>
         </div>
@@ -419,41 +448,54 @@
     </div>
   </div>
 
+  <!-- Modal for Exporting Work Report -->
+  <div id="exportModalOverlay" class="modalOverlay">
+    <div id="exportModal" class="exportModalPanel">
+      <h2>Export Work Report</h2>
+      <form id="exportForm">
+        <label for="exportStartDate">Start Date:</label>
+        <input type="date" id="exportStartDate" required>
+        <label for="exportEndDate">End Date:</label>
+        <input type="date" id="exportEndDate" required>
+        <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+          <button type="submit">Export Report</button>
+          <button type="button" onclick="closeExportModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
-    /* -----------------------------------------
-       JAVASCRIPT CODE
-       ----------------------------------------- */
+    /* ------------------------------
+       GLOBAL VARIABLES
+    ------------------------------ */
     let tasks = [];
     let labels = [];  // Array to store label objects: { id, name, color }
     let currentStatus = ""; // For creating a task
     let currentEditTaskId = null; // For editing a task
 
-    // Save tasks and labels to localStorage
+    /* ------------------------------
+       LOCAL STORAGE FUNCTIONS
+    ------------------------------ */
     function saveToLocalStorage() {
       localStorage.setItem('kanbanTasks', JSON.stringify(tasks));
     }
     function saveLabelsToLocalStorage() {
       localStorage.setItem('kanbanLabels', JSON.stringify(labels));
     }
-
-    // Load tasks and labels from localStorage
     function loadFromLocalStorage() {
       const storedData = localStorage.getItem('kanbanTasks');
-      if (storedData) {
-        tasks = JSON.parse(storedData);
-      }
+      if (storedData) { tasks = JSON.parse(storedData); }
       renderAllTasks();
     }
     function loadLabelsFromLocalStorage() {
       const storedLabels = localStorage.getItem('kanbanLabels');
-      if (storedLabels) {
-        labels = JSON.parse(storedLabels);
-      }
+      if (storedLabels) { labels = JSON.parse(storedLabels); }
     }
 
-    /* =========================================
-       RENDERING LABEL CHECKBOXES
-    ========================================= */
+    /* ------------------------------
+       LABEL RENDERING & MANAGEMENT
+    ------------------------------ */
     function renderLabels(containerId, selectedLabels = []) {
       const container = document.getElementById(containerId);
       container.innerHTML = "";
@@ -463,9 +505,7 @@
         checkbox.type = "checkbox";
         checkbox.id = containerId + "_label_" + label.id;
         checkbox.value = label.id;
-        if (selectedLabels.includes(String(label.id))) {
-          checkbox.checked = true;
-        }
+        if (selectedLabels.includes(String(label.id))) { checkbox.checked = true; }
         const span = document.createElement("span");
         span.textContent = label.name;
         span.style.backgroundColor = label.color;
@@ -474,10 +514,6 @@
         container.appendChild(div);
       });
     }
-
-    /* =========================================
-       ADDING NEW LABELS
-    ========================================= */
     function toggleNewLabel(mode) {
       const sectionId = mode === "create" ? "createNewLabelSection" : "editNewLabelSection";
       const section = document.getElementById(sectionId);
@@ -488,34 +524,24 @@
       const colorId = mode === "create" ? "newLabelColor" : "editNewLabelColor";
       const newLabelName = document.getElementById(nameId).value.trim();
       const newLabelColor = document.getElementById(colorId).value;
-      if (!newLabelName) {
-        alert("Please enter a label name.");
-        return;
-      }
-      const newLabel = {
-        id: Date.now(),
-        name: newLabelName,
-        color: newLabelColor
-      };
+      if (!newLabelName) { alert("Please enter a label name."); return; }
+      const newLabel = { id: Date.now(), name: newLabelName, color: newLabelColor };
       labels.push(newLabel);
       saveLabelsToLocalStorage();
-      // Re-render labels in both modals
       renderLabels("createLabelContainer");
       renderLabels("editLabelContainer", getTaskLabels(currentEditTaskId));
-      // Clear new label inputs and hide section
       document.getElementById(nameId).value = "";
       document.getElementById(colorId).value = "#ff0000";
-      section.style.display = "none";
+      document.getElementById(mode === "create" ? "createNewLabelSection" : "editNewLabelSection").style.display = "none";
     }
-
     function getTaskLabels(taskId) {
       const task = tasks.find(t => t.id == taskId);
       return task && task.labels ? task.labels.map(String) : [];
     }
 
-    /* =========================================
-       CREATE TASK
-    ========================================= */
+    /* ------------------------------
+       CREATE TASK MODAL
+    ------------------------------ */
     function openCreateModal(status) {
       currentStatus = status;
       document.getElementById("createTaskForm").reset();
@@ -533,13 +559,12 @@
       const taskDescription = document.getElementById("taskDescription").value.trim();
       const rawDeadline = document.getElementById("taskDeadline").value.trim();
       const taskDeadline = rawDeadline ? rawDeadline.replace("T", " ") : "";
-      const taskComment = document.getElementById("taskComment").value.trim();
-      // Gather selected labels
+      const taskNote = document.getElementById("taskNote").value.trim();
+      const taskEstimatedTime = document.getElementById("taskEstimatedTime").value.trim();
+      const taskWorkedHours = document.getElementById("taskWorkedHours").value.trim();
       let selectedLabels = [];
       document.querySelectorAll("#createLabelContainer input[type=checkbox]").forEach(checkbox => {
-        if (checkbox.checked) {
-          selectedLabels.push(checkbox.value);
-        }
+        if (checkbox.checked) { selectedLabels.push(checkbox.value); }
       });
       const task = {
         id: Date.now(),
@@ -547,7 +572,9 @@
         description: taskDescription,
         deadline: taskDeadline,
         creationDate: new Date().toISOString(),
-        comment: taskComment,
+        note: taskNote,
+        estimatedTime: taskEstimatedTime || "",
+        workedHours: taskWorkedHours || "",
         status: currentStatus,
         labels: selectedLabels
       };
@@ -557,20 +584,20 @@
       closeCreateModal();
     });
 
-    /* =========================================
-       EDIT TASK
-    ========================================= */
+    /* ------------------------------
+       EDIT TASK MODAL
+    ------------------------------ */
     function openEditModal(taskId) {
       currentEditTaskId = taskId;
       const task = tasks.find(t => t.id == taskId);
       if (!task) return;
       document.getElementById("editTaskName").value = task.name;
       document.getElementById("editTaskDescription").value = task.description;
-      document.getElementById("editTaskComment").value = task.comment;
+      document.getElementById("editTaskNote").value = task.note;
+      document.getElementById("editTaskEstimatedTime").value = task.estimatedTime;
+      document.getElementById("editTaskWorkedHours").value = task.workedHours;
       let dtValue = "";
-      if (task.deadline) {
-        dtValue = task.deadline.replace(" ", "T");
-      }
+      if (task.deadline) { dtValue = task.deadline.replace(" ", "T"); }
       document.getElementById("editTaskDeadline").value = dtValue;
       renderLabels("editLabelContainer", getTaskLabels(taskId));
       document.getElementById("editNewLabelSection").style.display = "none";
@@ -586,29 +613,99 @@
       const newName = document.getElementById("editTaskName").value.trim();
       if (!newName) return;
       const newDescription = document.getElementById("editTaskDescription").value.trim();
-      const newComment = document.getElementById("editTaskComment").value.trim();
+      const newNote = document.getElementById("editTaskNote").value.trim();
       const rawDeadline = document.getElementById("editTaskDeadline").value.trim();
       const newDeadline = rawDeadline ? rawDeadline.replace("T", " ") : "";
-      // Gather selected labels
+      const newEstimatedTime = document.getElementById("editTaskEstimatedTime").value.trim();
+      const newWorkedHours = document.getElementById("editTaskWorkedHours").value.trim();
       let selectedLabels = [];
       document.querySelectorAll("#editLabelContainer input[type=checkbox]").forEach(checkbox => {
-        if (checkbox.checked) {
-          selectedLabels.push(checkbox.value);
-        }
+        if (checkbox.checked) { selectedLabels.push(checkbox.value); }
       });
       task.name = newName;
       task.description = newDescription;
-      task.comment = newComment;
+      task.note = newNote;
       task.deadline = newDeadline;
+      task.estimatedTime = newEstimatedTime;
+      task.workedHours = newWorkedHours;
       task.labels = selectedLabels;
       saveToLocalStorage();
       renderAllTasks();
       closeEditModal();
     });
 
-    /* =========================================
-       RENDER & UPDATE TASKS
-    ========================================= */
+    /* ------------------------------
+       EXPORT REPORT MODAL
+    ------------------------------ */
+    function openExportModal() {
+      document.getElementById("exportForm").reset();
+      document.getElementById("exportModalOverlay").style.display = "flex";
+    }
+    function closeExportModal() {
+      document.getElementById("exportModalOverlay").style.display = "none";
+    }
+    document.getElementById("exportForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const startDate = document.getElementById("exportStartDate").value;
+      const endDate = document.getElementById("exportEndDate").value;
+      if (!startDate || !endDate) {
+        alert("Please select both start and end dates.");
+        return;
+      }
+      exportWorkReport(startDate, endDate);
+      closeExportModal();
+    });
+    function exportWorkReport(startDate, endDate) {
+      // Convert start and end dates to Date objects (start of day and end of day)
+      const start = new Date(startDate + "T00:00:00");
+      const end = new Date(endDate + "T23:59:59");
+      // Aggregate worked hours per day and per label
+      let report = {}; // { "YYYY-MM-DD": { labelName: totalWorkedHours, ... } }
+      tasks.forEach(task => {
+        // Use task.creationDate as the work date
+        const taskDate = new Date(task.creationDate);
+        if (taskDate >= start && taskDate <= end) {
+          const day = task.creationDate.split("T")[0]; // "YYYY-MM-DD"
+          if (!report[day]) report[day] = {};
+          // For each label of the task, add its workedHours (as number)
+          const worked = parseFloat(task.workedHours) || 0;
+          if (task.labels && task.labels.length > 0) {
+            task.labels.forEach(labelId => {
+              const label = labels.find(l => l.id == labelId);
+              if (label) {
+                if (!report[day][label.name]) report[day][label.name] = 0;
+                report[day][label.name] += worked;
+              }
+            });
+          } else {
+            // Tasks without label go to "No Label"
+            if (!report[day]["No Label"]) report[day]["No Label"] = 0;
+            report[day]["No Label"] += worked;
+          }
+        }
+      });
+      // Convert report object to CSV string
+      let csv = "Date,Label,Total Worked Hours\n";
+      for (const day in report) {
+        for (const label in report[day]) {
+          csv += `${day},${label},${report[day][label].toFixed(2)}\n`;
+        }
+      }
+      // Trigger CSV download
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "work_report.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    /* ------------------------------
+       HELPER FUNCTIONS
+    ------------------------------ */
     function parseDeadline(deadline) {
       if (!deadline) return null;
       let isoString = deadline.replace(" ", "T") + ":00";
@@ -620,9 +717,9 @@
       if (!deadlineDate || isNaN(deadlineDate)) return "white";
       const now = new Date();
       const diffHours = (deadlineDate - now) / (1000 * 60 * 60);
-      if (diffHours > 48) return "#d4f4dd";  // Light green
-      else if (diffHours >= 24 && diffHours <= 48) return "#fff9c4"; // Light yellow
-      else if (diffHours < 24) return "#f4d4d4"; // Light red
+      if (diffHours > 48) return "#d4f4dd";       // Light green
+      else if (diffHours >= 24 && diffHours <= 48) return "#fff9c4";  // Light yellow
+      else if (diffHours < 24) return "#f4d4d4";    // Light red
       return "white";
     }
     function renderTask(task) {
@@ -632,12 +729,13 @@
       taskEl.dataset.id = task.id;
       taskEl.addEventListener("dragstart", drag);
       taskEl.style.backgroundColor = getTaskBackground(task);
-
       let html = `<strong>${task.name}</strong>
                   <em>Description:</em> ${task.description}<br>
                   <em>Deadline:</em> ${task.deadline}<br>
                   <em>Created:</em> ${task.creationDate}<br>
-                  <em>Comment:</em> ${task.comment}<br>`;
+                  <em>Note:</em> ${task.note}<br>
+                  <em>Estimated Time:</em> ${task.estimatedTime} hrs,
+                  <em>Worked Hours:</em> ${task.workedHours} hrs<br>`;
       if (task.labels && task.labels.length > 0) {
         html += "<div style='margin-top: 5px;'>";
         task.labels.forEach(labelId => {
@@ -652,11 +750,8 @@
                <button onclick="openEditModal(${task.id})">Edit</button>
                <button onclick="deleteTask(${task.id})">Delete</button>`;
       taskEl.innerHTML = html;
-
       const column = document.querySelector(`.column[data-status='${task.status}'] .task-list`);
-      if (column) {
-        column.appendChild(taskEl);
-      }
+      if (column) { column.appendChild(taskEl); }
     }
     function renderAllTasks() {
       document.querySelectorAll(".task-list").forEach(list => (list.innerHTML = ""));
@@ -676,10 +771,6 @@
         tasksForColumn.forEach(task => renderTask(task));
       });
     }
-
-    /* =========================================
-       DRAG & DROP
-    ========================================= */
     function drag(event) {
       event.dataTransfer.setData("text/plain", event.target.dataset.id);
     }
@@ -697,14 +788,10 @@
         saveToLocalStorage();
       }
     }
-
-    /* =========================================
-       TASK ACTIONS
-    ========================================= */
     function copyTask(taskId) {
       const task = tasks.find(t => t.id == taskId);
       if (task) {
-        const text = `Task: ${task.name}\nDescription: ${task.description}\nDeadline: ${task.deadline}\nCreated: ${task.creationDate}\nComment: ${task.comment}`;
+        const text = `Task: ${task.name}\nDescription: ${task.description}\nDeadline: ${task.deadline}\nCreated: ${task.creationDate}\nNote: ${task.note}\nEstimated Time: ${task.estimatedTime} hrs\nWorked Hours: ${task.workedHours} hrs`;
         navigator.clipboard.writeText(text)
           .then(() => alert("Task details copied to clipboard!"))
           .catch(err => alert("Error copying task: " + err));
@@ -715,10 +802,6 @@
       renderAllTasks();
       saveToLocalStorage();
     }
-
-    /* =========================================
-       DATA MANAGEMENT
-    ========================================= */
     function clearLocalStorage() {
       if (confirm("Are you sure you want to delete all data from localStorage?")) {
         localStorage.removeItem("kanbanTasks");
@@ -762,14 +845,94 @@
       event.target.value = "";
     }
 
-    /* =========================================
-       INIT ON PAGE LOAD
-    ========================================= */
+    /* ------------------------------
+       EXPORT WORK REPORT
+    ------------------------------ */
+    function openExportModal() {
+      document.getElementById("exportForm").reset();
+      document.getElementById("exportModalOverlay").style.display = "flex";
+    }
+    function closeExportModal() {
+      document.getElementById("exportModalOverlay").style.display = "none";
+    }
+    document.getElementById("exportForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const startDate = document.getElementById("exportStartDate").value;
+      const endDate = document.getElementById("exportEndDate").value;
+      if (!startDate || !endDate) {
+        alert("Please select both start and end dates.");
+        return;
+      }
+      exportWorkReport(startDate, endDate);
+      closeExportModal();
+    });
+    function exportWorkReport(startDate, endDate) {
+      // Filter tasks by creationDate between start and end (inclusive)
+      const start = new Date(startDate + "T00:00:00");
+      const end = new Date(endDate + "T23:59:59");
+      let report = {}; // Format: { "YYYY-MM-DD": { labelName: totalWorkedHours, ... } }
+      tasks.forEach(task => {
+        const taskDate = new Date(task.creationDate);
+        if (taskDate >= start && taskDate <= end) {
+          const day = task.creationDate.split("T")[0];
+          if (!report[day]) report[day] = {};
+          const worked = parseFloat(task.workedHours) || 0;
+          if (task.labels && task.labels.length > 0) {
+            task.labels.forEach(labelId => {
+              const label = labels.find(l => l.id == labelId);
+              if (label) {
+                if (!report[day][label.name]) report[day][label.name] = 0;
+                report[day][label.name] += worked;
+              }
+            });
+          } else {
+            if (!report[day]["No Label"]) report[day]["No Label"] = 0;
+            report[day]["No Label"] += worked;
+          }
+        }
+      });
+      let csv = "Date,Label,Total Worked Hours\n";
+      for (const day in report) {
+        for (const label in report[day]) {
+          csv += `${day},${label},${report[day][label].toFixed(2)}\n`;
+        }
+      }
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "work_report.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    /* ------------------------------
+       INIT
+    ------------------------------ */
     window.onload = function() {
       loadLabelsFromLocalStorage();
       loadFromLocalStorage();
     };
   </script>
+  
+  <!-- Export Report Modal -->
+  <div id="exportModalOverlay" class="modalOverlay">
+    <div id="exportModal" class="exportModalPanel">
+      <h2>Export Work Report</h2>
+      <form id="exportForm">
+        <label for="exportStartDate">Start Date:</label>
+        <input type="date" id="exportStartDate" required>
+        <label for="exportEndDate">End Date:</label>
+        <input type="date" id="exportEndDate" required>
+        <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+          <button type="submit">Export Report</button>
+          <button type="button" onclick="closeExportModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 </body>
 </html>
-
