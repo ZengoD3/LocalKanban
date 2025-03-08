@@ -15,7 +15,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Kanban Board (localStorage)</title>
+  <title>Local Kanban</title>
   <!-- XLSX Library from CDN for .xlsx export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
@@ -136,6 +136,11 @@
       color: #2c3e50;
     }
     .task em { font-style: normal; color: #555; font-size: 0.85rem; }
+	.task .description {
+	  white-space: pre-wrap;
+	  overflow-wrap: anywhere;
+	  word-wrap: break-all;
+	}
     .task button {
       background-color: #3498db;
       margin-top: 6px;
@@ -162,7 +167,7 @@
       padding: 20px;
       border-radius: 4px;
       width: 100%;
-      max-width: 340px;
+      max-width: 640px;
       box-shadow: 0 0 10px rgba(0,0,0,0.2);
     }
     .modalPanel h2 {
@@ -188,7 +193,7 @@
       border-radius: 4px;
       font-size: 0.9rem;
     }
-    .modalPanel textarea { resize: vertical; min-height: 60px; }
+    .modalPanel textarea { resize: vertical; min-height: 150px; }
     .modalPanel button {
       margin-top: 10px;
       padding: 8px 14px;
@@ -308,11 +313,12 @@
 
   <!-- Toolbar -->
   <div class="toolbar">
-    <button id="clearStorageBtn" onclick="clearLocalStorage()">Clear Data</button>
-    <button id="backupBtn" onclick="backupData()">Backup Data to JSON</button>
-    <button id="exportReportBtn" onclick="openExportModal()">Export Work Report</button>
-    <input type="file" id="restoreInput" onchange="restoreBackup(event)">
+
+    <button id="backupBtn" onclick="backupData()">Save Data to JSON</button>
+	<input type="file" id="restoreInput" onchange="restoreBackup(event)">
     <label for="restoreInput">Restore Data from JSON</label>
+    <button id="exportReportBtn" onclick="openExportModal()">Export Work Report</button>
+	 <button id="clearStorageBtn" onclick="clearLocalStorage()">Clear Data</button>
   </div>
 
   <!-- Board Columns -->
@@ -744,12 +750,12 @@
       taskEl.addEventListener("dragstart", drag);
       taskEl.style.backgroundColor = getTaskBackground(task);
       let html = `<strong>${task.name}</strong>
-                  <em>Description:</em> ${task.description}<br>
+				  <div class="description">${task.description}</div><br>
                   <em>Deadline:</em> ${task.deadline}<br>
-                  <em>Created:</em> ${task.creationDate}<br>
+              <!--<em>Created:</em> ${task.creationDate}<br> -->
                   <em>Note:</em> ${task.note}<br>
-                  <em>Estimated Time:</em> ${task.estimatedTime} hrs,
-                  <em>Worked Hours:</em> ${task.workedHours} hrs<br>`;
+                  <em>Estimated:</em> ${task.estimatedTime} hrs,
+                  <em>Worked:</em> ${task.workedHours} hrs<br>`;
       if (task.labels && task.labels.length > 0) {
         html += "<div style='margin-top: 5px;'>";
         task.labels.forEach(labelId => {
