@@ -1,0 +1,584 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kanban Board (localStorage)</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+    .board {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+    }
+    .column {
+      flex: 1 1 18%;
+      margin: 10px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      min-height: 400px;
+      background: #f0f0f0;
+      border-radius: 4px;
+    }
+    .column h2 {
+      text-align: center;
+    }
+    .task-list {
+      min-height: 300px;
+    }
+    .task {
+      border: 1px solid #333;
+      margin: 5px;
+      padding: 5px;
+      background: white;
+      cursor: move;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+    .task button {
+      margin-top: 5px;
+      font-size: 0.8em;
+      padding: 2px 5px;
+      cursor: pointer;
+    }
+    button {
+      margin: 5px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    #clearStorageBtn {
+      background-color: #e74c3c;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+    }
+    #backupBtn {
+      background-color: #2ecc71;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+    }
+    /* Modal overlay styles */
+    .modalOverlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    /* Modal panel styles */
+    .modalPanel {
+      background: white;
+      padding: 20px;
+      border-radius: 4px;
+      width: 320px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    .modalPanel h2 {
+      margin-top: 0;
+    }
+    .modalPanel label {
+      display: block;
+      margin-top: 10px;
+    }
+    .modalPanel input, .modalPanel textarea, .modalPanel select {
+      width: 100%;
+      padding: 5px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+    .modalPanel button {
+      margin-top: 10px;
+    }
+    /* Label selection styles */
+    .labelContainer div {
+      margin-top: 5px;
+    }
+    .labelContainer span {
+      margin-left: 5px;
+      padding: 2px 4px;
+      border-radius: 3px;
+      color: white;
+      font-size: 0.85em;
+    }
+    .newLabelSection {
+      margin-top: 10px;
+      display: none;
+      border-top: 1px dashed #ccc;
+      padding-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Kanban Board (localStorage)</h1>
+  <!-- Data management buttons -->
+  <button id="clearStorageBtn" onclick="clearLocalStorage()">Clear Data (localStorage)</button>
+  <button id="backupBtn" onclick="backupData()">Backup Data to JSON</button>
+  <input type="file" id="restoreInput" onchange="restoreBackup(event)" style="margin-left:10px;">
+  <label for="restoreInput">Restore Data from JSON</label>
+  
+  <div class="board">
+    <!-- Backlog Column -->
+    <div class="column" data-status="backlog">
+      <h2>Backlog</h2>
+      <button onclick="openCreateModal('backlog')">New Task</button>
+      <div class="task-list" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
+    </div>
+    <!-- To Do Column -->
+    <div class="column" data-status="todo">
+      <h2>To Do</h2>
+      <button onclick="openCreateModal('todo')">New Task</button>
+      <div class="task-list" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
+    </div>
+    <!-- In Progress Column -->
+    <div class="column" data-status="inprogress">
+      <h2>In Progress</h2>
+      <button onclick="openCreateModal('inprogress')">New Task</button>
+      <div class="task-list" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
+    </div>
+    <!-- Paused Column -->
+    <div class="column" data-status="paused">
+      <h2>Paused</h2>
+      <button onclick="openCreateModal('paused')">New Task</button>
+      <div class="task-list" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
+    </div>
+    <!-- Done Column -->
+    <div class="column" data-status="done">
+      <h2>Done</h2>
+      <button onclick="openCreateModal('done')">New Task</button>
+      <div class="task-list" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
+    </div>
+  </div>
+
+  <!-- Modal for Creating a Task -->
+  <div id="createModalOverlay" class="modalOverlay">
+    <div id="createModal" class="modalPanel">
+      <h2>Create New Task</h2>
+      <form id="createTaskForm">
+        <label for="taskName">Task Name:</label>
+        <input type="text" id="taskName" required>
+        
+        <label for="taskDescription">Task Description:</label>
+        <textarea id="taskDescription" rows="3"></textarea>
+        
+        <label for="taskDeadline">Task Deadline:</label>
+        <input type="datetime-local" id="taskDeadline">
+        
+        <label for="taskComment">Task Comment:</label>
+        <input type="text" id="taskComment">
+        
+        <!-- Label selection section -->
+        <label>Labels:</label>
+        <div id="createLabelContainer" class="labelContainer"></div>
+        <button type="button" onclick="toggleNewLabel('create')">Add New Label</button>
+        <div id="createNewLabelSection" class="newLabelSection">
+          <label for="newLabelName">New Label Name:</label>
+          <input type="text" id="newLabelName">
+          <label for="newLabelColor">New Label Color:</label>
+          <input type="color" id="newLabelColor" value="#ff0000">
+          <button type="button" onclick="addNewLabel('create')">Add Label</button>
+        </div>
+        
+        <button type="submit">Create Task</button>
+        <button type="button" onclick="closeCreateModal()">Cancel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Editing a Task -->
+  <div id="editModalOverlay" class="modalOverlay">
+    <div id="editModal" class="modalPanel">
+      <h2>Edit Task</h2>
+      <form id="editTaskForm">
+        <label for="editTaskName">Task Name:</label>
+        <input type="text" id="editTaskName" required>
+        
+        <label for="editTaskDescription">Task Description:</label>
+        <textarea id="editTaskDescription" rows="3"></textarea>
+        
+        <label for="editTaskDeadline">Task Deadline:</label>
+        <input type="datetime-local" id="editTaskDeadline">
+        
+        <label for="editTaskComment">Task Comment:</label>
+        <input type="text" id="editTaskComment">
+        
+        <!-- Label selection section for editing -->
+        <label>Labels:</label>
+        <div id="editLabelContainer" class="labelContainer"></div>
+        <button type="button" onclick="toggleNewLabel('edit')">Add New Label</button>
+        <div id="editNewLabelSection" class="newLabelSection">
+          <label for="editNewLabelName">New Label Name:</label>
+          <input type="text" id="editNewLabelName">
+          <label for="editNewLabelColor">New Label Color:</label>
+          <input type="color" id="editNewLabelColor" value="#ff0000">
+          <button type="button" onclick="addNewLabel('edit')">Add Label</button>
+        </div>
+        
+        <button type="submit">Save Changes</button>
+        <button type="button" onclick="closeEditModal()">Cancel</button>
+      </form>
+    </div>
+  </div>
+  
+  <script>
+    let tasks = [];
+    let labels = [];  // Array to store label objects: { id, name, color }
+    let currentStatus = ""; // For creating a task
+    let currentEditTaskId = null; // For editing a task
+
+    // Save tasks and labels to localStorage
+    function saveToLocalStorage() {
+      localStorage.setItem('kanbanTasks', JSON.stringify(tasks));
+    }
+    function saveLabelsToLocalStorage() {
+      localStorage.setItem('kanbanLabels', JSON.stringify(labels));
+    }
+    // Load tasks and labels from localStorage
+    function loadFromLocalStorage() {
+      const storedData = localStorage.getItem('kanbanTasks');
+      if (storedData) {
+        tasks = JSON.parse(storedData);
+      }
+      renderAllTasks();
+    }
+    function loadLabelsFromLocalStorage() {
+      const storedLabels = localStorage.getItem('kanbanLabels');
+      if (storedLabels) {
+        labels = JSON.parse(storedLabels);
+      }
+    }
+    
+    // Render labels in a given container (either create or edit modal)
+    function renderLabels(containerId, selectedLabels = []) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = "";
+      labels.forEach(label => {
+        const div = document.createElement("div");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = containerId + "_label_" + label.id;
+        checkbox.value = label.id;
+        if (selectedLabels.includes(String(label.id))) {
+          checkbox.checked = true;
+        }
+        const span = document.createElement("span");
+        span.textContent = label.name;
+        span.style.backgroundColor = label.color;
+        span.style.color = "white";
+        div.appendChild(checkbox);
+        div.appendChild(span);
+        container.appendChild(div);
+      });
+    }
+    
+    // Toggle new label section for create or edit modal
+    function toggleNewLabel(mode) {
+      const sectionId = mode === "create" ? "createNewLabelSection" : "editNewLabelSection";
+      const section = document.getElementById(sectionId);
+      section.style.display = section.style.display === "none" || section.style.display === "" ? "block" : "none";
+    }
+    // Add new label for create or edit modal
+    function addNewLabel(mode) {
+      const nameId = mode === "create" ? "newLabelName" : "editNewLabelName";
+      const colorId = mode === "create" ? "newLabelColor" : "editNewLabelColor";
+      const newLabelName = document.getElementById(nameId).value.trim();
+      const newLabelColor = document.getElementById(colorId).value;
+      if (!newLabelName) {
+        alert("Please enter a label name.");
+        return;
+      }
+      const newLabel = {
+        id: Date.now(),
+        name: newLabelName,
+        color: newLabelColor
+      };
+      labels.push(newLabel);
+      saveLabelsToLocalStorage();
+      // Re-render labels in both modals
+      renderLabels("createLabelContainer");
+      renderLabels("editLabelContainer", mode === "edit" ? getTaskLabels(currentEditTaskId) : []);
+      // Clear inputs and hide section
+      document.getElementById(nameId).value = "";
+      document.getElementById(colorId).value = "#ff0000";
+      document.getElementById(mode === "create" ? "createNewLabelSection" : "editNewLabelSection").style.display = "none";
+    }
+    
+    // Get label IDs assigned to a task (as strings)
+    function getTaskLabels(taskId) {
+      const task = tasks.find(t => t.id == taskId);
+      return task && task.labels ? task.labels.map(String) : [];
+    }
+    
+    // Modal for Creating a Task
+    function openCreateModal(status) {
+      currentStatus = status;
+      document.getElementById("createTaskForm").reset();
+      renderLabels("createLabelContainer");
+      document.getElementById("createNewLabelSection").style.display = "none";
+      document.getElementById("createModalOverlay").style.display = "flex";
+    }
+    function closeCreateModal() {
+      document.getElementById("createModalOverlay").style.display = "none";
+    }
+    
+    // Modal for Editing a Task
+    function openEditModal(taskId) {
+      currentEditTaskId = taskId;
+      const task = tasks.find(t => t.id == taskId);
+      if (!task) return;
+      // Pre-fill form fields (convert deadline to datetime-local format: "YYYY-MM-DDTHH:MM")
+      document.getElementById("editTaskName").value = task.name;
+      document.getElementById("editTaskDescription").value = task.description;
+      document.getElementById("editTaskComment").value = task.comment;
+      let dtValue = "";
+      if (task.deadline) {
+        dtValue = task.deadline.replace(" ", "T");
+      }
+      document.getElementById("editTaskDeadline").value = dtValue;
+      renderLabels("editLabelContainer", getTaskLabels(taskId));
+      document.getElementById("editNewLabelSection").style.display = "none";
+      document.getElementById("editModalOverlay").style.display = "flex";
+    }
+    function closeEditModal() {
+      document.getElementById("editModalOverlay").style.display = "none";
+    }
+    
+    // Handle create task form submission
+    document.getElementById("createTaskForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const taskName = document.getElementById("taskName").value.trim();
+      if (!taskName) return;
+      const taskDescription = document.getElementById("taskDescription").value.trim();
+      const rawDeadline = document.getElementById("taskDeadline").value.trim();
+      const taskDeadline = rawDeadline ? rawDeadline.replace("T", " ") : "";
+      const taskComment = document.getElementById("taskComment").value.trim();
+      // Gather selected labels
+      let selectedLabels = [];
+      document.querySelectorAll("#createLabelContainer input[type=checkbox]").forEach(checkbox => {
+        if (checkbox.checked) {
+          selectedLabels.push(checkbox.value);
+        }
+      });
+      
+      const task = {
+        id: Date.now(),
+        name: taskName,
+        description: taskDescription,
+        deadline: taskDeadline,
+        creationDate: new Date().toISOString(),
+        comment: taskComment,
+        status: currentStatus,
+        labels: selectedLabels
+      };
+      
+      tasks.push(task);
+      renderAllTasks();
+      saveToLocalStorage();
+      closeCreateModal();
+    });
+    
+    // Handle edit task form submission
+    document.getElementById("editTaskForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const task = tasks.find(t => t.id == currentEditTaskId);
+      if (!task) return;
+      const newName = document.getElementById("editTaskName").value.trim();
+      if (!newName) return;
+      const newDescription = document.getElementById("editTaskDescription").value.trim();
+      const newComment = document.getElementById("editTaskComment").value.trim();
+      const rawDeadline = document.getElementById("editTaskDeadline").value.trim();
+      const newDeadline = rawDeadline ? rawDeadline.replace("T", " ") : "";
+      // Gather selected labels from edit modal
+      let selectedLabels = [];
+      document.querySelectorAll("#editLabelContainer input[type=checkbox]").forEach(checkbox => {
+        if (checkbox.checked) {
+          selectedLabels.push(checkbox.value);
+        }
+      });
+      
+      task.name = newName;
+      task.description = newDescription;
+      task.comment = newComment;
+      task.deadline = newDeadline;
+      task.labels = selectedLabels;
+      
+      saveToLocalStorage();
+      renderAllTasks();
+      closeEditModal();
+    });
+    
+    // Parse deadline string ("YYYY-MM-DD HH:MM") into a Date object
+    function parseDeadline(deadline) {
+      if (!deadline) return null;
+      let isoString = deadline.replace(" ", "T") + ":00";
+      return new Date(isoString);
+    }
+    
+    // Determine background color based on deadline proximity
+    function getTaskBackground(task) {
+      if (!task.deadline) return "white";
+      const deadlineDate = parseDeadline(task.deadline);
+      if (!deadlineDate || isNaN(deadlineDate)) return "white";
+      const now = new Date();
+      const diffHours = (deadlineDate - now) / (1000 * 60 * 60);
+      if (diffHours > 48) return "#d4f4dd";       // Light green
+      else if (diffHours >= 24 && diffHours <= 48) return "#fff9c4";  // Light yellow
+      else if (diffHours < 24) return "#f4d4d4";    // Light red
+      return "white";
+    }
+    
+    // Render a single task with Copy, Edit, Delete buttons and display its labels
+    function renderTask(task) {
+      const taskEl = document.createElement("div");
+      taskEl.className = "task";
+      taskEl.draggable = true;
+      taskEl.dataset.id = task.id;
+      taskEl.addEventListener("dragstart", drag);
+      
+      // Set background color based on deadline
+      taskEl.style.backgroundColor = getTaskBackground(task);
+      
+      let html = `<strong>${task.name}</strong><br>
+                  <em>Description:</em> ${task.description}<br>
+                  <em>Deadline:</em> ${task.deadline}<br>
+                  <em>Created:</em> ${task.creationDate}<br>
+                  <em>Comment:</em> ${task.comment}<br>`;
+      // Render labels if any
+      if (task.labels && task.labels.length > 0) {
+        html += "<div>";
+        task.labels.forEach(labelId => {
+          const label = labels.find(l => l.id == labelId);
+          if (label) {
+            html += `<span style="background:${label.color}; color:white; padding:2px 4px; margin-right:4px; border-radius:3px;">${label.name}</span>`;
+          }
+        });
+        html += "</div>";
+      }
+      html += `<button onclick="copyTask(${task.id})">Copy</button>
+               <button onclick="openEditModal(${task.id})">Edit</button>
+               <button onclick="deleteTask(${task.id})">Delete</button>`;
+      taskEl.innerHTML = html;
+      
+      const column = document.querySelector(`.column[data-status='${task.status}'] .task-list`);
+      if (column) {
+        column.appendChild(taskEl);
+      }
+    }
+    
+    // Render all tasks, sorting them by deadline within each column
+    function renderAllTasks() {
+      document.querySelectorAll(".task-list").forEach(list => list.innerHTML = "");
+      const columns = document.querySelectorAll(".column");
+      columns.forEach(column => {
+        const status = column.getAttribute("data-status");
+        let tasksForColumn = tasks.filter(task => task.status === status);
+        tasksForColumn.sort((a, b) => {
+          if (!a.deadline && !b.deadline) return 0;
+          if (!a.deadline) return 1;
+          if (!b.deadline) return -1;
+          const da = parseDeadline(a.deadline);
+          const db = parseDeadline(b.deadline);
+          if (da && db) return da - db;
+          return 0;
+        });
+        tasksForColumn.forEach(task => renderTask(task));
+      });
+    }
+    
+    // Drag and drop event handlers
+    function drag(event) {
+      event.dataTransfer.setData("text/plain", event.target.dataset.id);
+    }
+    function allowDrop(event) {
+      event.preventDefault();
+    }
+    function drop(event) {
+      event.preventDefault();
+      const taskId = event.dataTransfer.getData("text/plain");
+      const task = tasks.find(t => t.id == taskId);
+      const newStatus = event.currentTarget.parentElement.getAttribute("data-status");
+      if (task && newStatus) {
+        task.status = newStatus;
+        renderAllTasks();
+        saveToLocalStorage();
+      }
+    }
+    
+    // Copy task details to clipboard
+    function copyTask(taskId) {
+      const task = tasks.find(t => t.id == taskId);
+      if (task) {
+        const text = `Task: ${task.name}\nDescription: ${task.description}\nDeadline: ${task.deadline}\nCreated: ${task.creationDate}\nComment: ${task.comment}`;
+        navigator.clipboard.writeText(text)
+          .then(() => alert("Task details copied to clipboard!"))
+          .catch(err => alert("Error copying task: " + err));
+      }
+    }
+    
+    // Delete a task
+    function deleteTask(taskId) {
+      tasks = tasks.filter(t => t.id != taskId);
+      renderAllTasks();
+      saveToLocalStorage();
+    }
+    
+    // Clear all data from localStorage and board
+    function clearLocalStorage() {
+      if (confirm("Are you sure you want to delete all data from localStorage?")) {
+        localStorage.removeItem('kanbanTasks');
+        tasks = [];
+        renderAllTasks();
+        alert("Data deleted.");
+      }
+    }
+    
+    // Backup tasks to a JSON file
+    function backupData() {
+      const dataStr = JSON.stringify(tasks, null, 2);
+      const blob = new Blob([dataStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "kanban_backup.json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    
+    // Restore tasks from a JSON backup file into localStorage
+    function restoreBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (Array.isArray(data)) {
+            tasks = data;
+            saveToLocalStorage();
+            renderAllTasks();
+            alert("Data restored successfully!");
+          } else {
+            alert("Invalid file format.");
+          }
+        } catch (error) {
+          alert("Error restoring data: " + error);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = "";
+    }
+    
+    window.onload = function() {
+      loadLabelsFromLocalStorage();
+      loadFromLocalStorage();
+    };
+  </script>
+</body>
+</html>
